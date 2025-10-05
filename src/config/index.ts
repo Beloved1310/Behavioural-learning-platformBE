@@ -12,10 +12,10 @@ export const config = {
   },
   
   jwt: {
-    secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-jwt-key',
-    expire: process.env.JWT_EXPIRE || '15m',
-    refreshExpire: process.env.JWT_REFRESH_EXPIRE || '7d'
+    secret: (process.env.JWT_SECRET || 'your-super-secret-jwt-key') as string,
+    refreshSecret: (process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-jwt-key') as string,
+    expire: (process.env.JWT_EXPIRE || '15m') as string,
+    refreshExpire: (process.env.JWT_REFRESH_EXPIRE || '7d') as string
   },
   
   stripe: {

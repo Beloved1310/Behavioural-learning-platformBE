@@ -1,0 +1,110 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Session = void 0;
+const mongoose_1 = require("mongoose");
+const types_1 = require("../types");
+const sessionSchema = new mongoose_1.Schema({
+    studentId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true
+    },
+    tutorId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true
+    },
+    subject: {
+        type: String,
+        required: true,
+        index: true
+    },
+    title: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 200
+    },
+    description: {
+        type: String,
+        maxlength: 1000
+    },
+    scheduledAt: {
+        type: Date,
+        required: true,
+        index: true
+    },
+    duration: {
+        type: Number,
+        required: true,
+        min: 15,
+        max: 180 // 3 hours max
+    },
+    status: {
+        type: String,
+        enum: Object.values(types_1.SessionStatus),
+        default: types_1.SessionStatus.SCHEDULED,
+        index: true
+    },
+    meetingUrl: {
+        type: String
+    },
+    price: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    notes: {
+        type: String,
+        maxlength: 2000
+    },
+    rating: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    feedback: {
+        type: String,
+        maxlength: 1000
+    }
+}, {
+    timestamps: true
+});
+// Compound indexes for efficient queries
+sessionSchema.index({ studentId: 1, scheduledAt: -1 });
+sessionSchema.index({ tutorId: 1, scheduledAt: -1 });
+sessionSchema.index({ status: 1, scheduledAt: 1 });
+sessionSchema.index({ subject: 1, scheduledAt: -1 });
+// Virtual to populate student and tutor details
+sessionSchema.virtual('student', {
+    ref: 'User',
+    localField: 'studentId',
+    foreignField: '_id',
+    justOne: true
+});
+sessionSchema.virtual('tutor', {
+    ref: 'User',
+    localField: 'tutorId',
+    foreignField: '_id',
+    justOne: true
+});
+// Instance method to check if session can be cancelled
+sessionSchema.methods.canBeCancelled = function () {
+    const now = new Date();
+    const sessionTime = new Date(this.scheduledAt);
+    const hoursUntilSession = (sessionTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return hoursUntilSession > 2 && this.status === types_1.SessionStatus.SCHEDULED;
+};
+// Static method to find upcoming sessions
+sessionSchema.statics.findUpcomingSessions = function (userId, role) {
+    const field = role === 'student' ? 'studentId' : 'tutorId';
+    return this.find({
+        [field]: userId,
+        scheduledAt: { $gte: new Date() },
+        status: { $in: [types_1.SessionStatus.SCHEDULED, types_1.SessionStatus.IN_PROGRESS] }
+    }).sort({ scheduledAt: 1 });
+};
+exports.Session = (0, mongoose_1.model)('Session', sessionSchema);
+//# sourceMappingURL=Session.js.map
