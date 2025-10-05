@@ -5,19 +5,16 @@ const sessionSchema = new Schema<ISession>({
   studentId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   tutorId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   subject: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   title: {
     type: String,
@@ -31,8 +28,7 @@ const sessionSchema = new Schema<ISession>({
   },
   scheduledAt: {
     type: Date,
-    required: true,
-    index: true
+    required: true
   },
   duration: {
     type: Number,
@@ -43,8 +39,7 @@ const sessionSchema = new Schema<ISession>({
   status: {
     type: String,
     enum: Object.values(SessionStatus),
-    default: SessionStatus.SCHEDULED,
-    index: true
+    default: SessionStatus.SCHEDULED
   },
   meetingUrl: {
     type: String

@@ -5,13 +5,11 @@ const notificationSchema = new Schema<INotification>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   type: {
     type: String,
     required: true,
-    index: true,
     enum: [
       'study_reminder',
       'session_reminder',
@@ -39,8 +37,7 @@ const notificationSchema = new Schema<INotification>({
   },
   isRead: {
     type: Boolean,
-    default: false,
-    index: true
+    default: false
   }
 }, {
   timestamps: { createdAt: true, updatedAt: false }

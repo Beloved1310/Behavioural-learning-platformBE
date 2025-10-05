@@ -5,8 +5,7 @@ const behavioralDataSchema = new Schema<IBehavioralData>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   sessionDuration: {
     type: Number,
@@ -33,8 +32,7 @@ const behavioralDataSchema = new Schema<IBehavioralData>({
   },
   timestamp: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   }
 }, {
   timestamps: false

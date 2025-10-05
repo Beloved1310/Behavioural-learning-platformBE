@@ -5,19 +5,16 @@ const userBadgeSchema = new Schema<IUserBadge>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   badgeId: {
     type: Schema.Types.ObjectId,
     ref: 'Badge',
-    required: true,
-    index: true
+    required: true
   },
   earnedAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   }
 }, {
   timestamps: false

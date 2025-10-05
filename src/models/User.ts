@@ -7,8 +7,7 @@ const userSchema = new Schema<IUser>({
     required: true,
     unique: true,
     lowercase: true,
-    trim: true,
-    index: true
+    trim: true
   },
   password: {
     type: String,
@@ -30,8 +29,7 @@ const userSchema = new Schema<IUser>({
   role: {
     type: String,
     enum: Object.values(UserRole),
-    required: true,
-    index: true
+    required: true
   },
   dateOfBirth: {
     type: Date
@@ -41,14 +39,12 @@ const userSchema = new Schema<IUser>({
   },
   isVerified: {
     type: Boolean,
-    default: false,
-    index: true
+    default: false
   },
   subscriptionTier: {
     type: String,
     enum: Object.values(SubscriptionTier),
-    default: SubscriptionTier.BASIC,
-    index: true
+    default: SubscriptionTier.BASIC
   },
   parentId: {
     type: Schema.Types.ObjectId,
@@ -117,7 +113,7 @@ const userSchema = new Schema<IUser>({
 });
 
 // Indexes for performance
-userSchema.index({ email: 1 });
+// Note: email already has unique index from schema definition
 userSchema.index({ role: 1 });
 userSchema.index({ isVerified: 1 });
 userSchema.index({ subscriptionTier: 1 });
