@@ -14,8 +14,7 @@ const fileSchema = new Schema<IFile>({
   },
   mimeType: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   size: {
     type: Number,
@@ -30,8 +29,7 @@ const fileSchema = new Schema<IFile>({
   uploadedBy: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   }
 }, {
   timestamps: { createdAt: true, updatedAt: false }

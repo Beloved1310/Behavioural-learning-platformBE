@@ -6,8 +6,7 @@ const userPreferencesSchema = new Schema<IUserPreferences>({
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   studyReminders: {
     type: Boolean,
@@ -50,7 +49,6 @@ const userPreferencesSchema = new Schema<IUserPreferences>({
   timestamps: true
 });
 
-// Index for efficient lookups
-userPreferencesSchema.index({ userId: 1 });
+// Note: userId already has unique index from schema definition
 
 export const UserPreferences = model<IUserPreferences>('UserPreferences', userPreferencesSchema);

@@ -5,8 +5,7 @@ const studyReminderSchema = new Schema<IStudyReminder>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   title: {
     type: String,
@@ -20,8 +19,7 @@ const studyReminderSchema = new Schema<IStudyReminder>({
   },
   scheduledAt: {
     type: Date,
-    required: true,
-    index: true
+    required: true
   },
   isRecurring: {
     type: Boolean,
@@ -36,8 +34,7 @@ const studyReminderSchema = new Schema<IStudyReminder>({
   },
   isActive: {
     type: Boolean,
-    default: true,
-    index: true
+    default: true
   }
 }, {
   timestamps: { createdAt: true, updatedAt: false }
@@ -120,13 +117,13 @@ studyReminderSchema.statics.createRecurringInstances = function(
   reminderId: string,
   count: number = 10
 ) {
-  return this.findById(reminderId).then((reminder) => {
+  return this.findById(reminderId).then((reminder: IStudyReminder | null) => {
     if (!reminder || !reminder.isRecurring) {
       throw new Error('Reminder not found or not recurring');
     }
 
     const instances = [];
-    let nextDate = new Date(reminder.scheduledAt);
+    let nextDate: Date | null = new Date(reminder.scheduledAt);
 
     for (let i = 0; i < count; i++) {
       nextDate = reminder.getNextOccurrence();
