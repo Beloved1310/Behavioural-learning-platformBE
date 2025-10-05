@@ -75,7 +75,7 @@ app.use('/api', (req, res) => {
 // Routes
 import authRoutes from './routes/auth';
 
-app.use('v1/api/auth', authRoutes);
+app.use('/v1/api/auth', authRoutes);
 // app.use('/api/users', userRoutes);
 // app.use('/api/sessions', sessionRoutes);
 // app.use('/api/chat', chatRoutes);
