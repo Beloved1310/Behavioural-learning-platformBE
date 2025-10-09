@@ -3,9 +3,10 @@ import jwt, { SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
 import { UserRole } from "../types";
 import config from "../config";
-import { User, UserPreferences } from "../models";
 import { sendEmail } from "./emailService";
 import { AppError } from "../middleware/errorHandler";
+import { userRepository } from "../repositories/UserRepository";
+import { userPreferencesRepository } from "../repositories/UserPreferencesRepository";
 
 export interface RegisterData {
   email: string;
@@ -62,7 +63,7 @@ export class AuthService {
     } = data;
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await userRepository.findByEmail(email);
 
     if (existingUser) {
       const error: AppError = new Error("User with this email already exists");
@@ -94,6 +95,7 @@ export class AuthService {
 
     const hashedPassword = await this.hashPassword(password);
     const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Create user
     const userData: any = {
@@ -103,6 +105,8 @@ export class AuthService {
       lastName,
       role,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+      verificationToken,
+      verificationTokenExpiry,
     };
 
     // Add role-specific fields
@@ -113,10 +117,10 @@ export class AuthService {
       userData.qualifications = [];
     }
 
-    const user = await User.create(userData);
+    const user = await userRepository.create(userData);
 
     // Create user preferences
-    await UserPreferences.create({
+    await userPreferencesRepository.create({
       userId: user._id,
     });
 
@@ -151,7 +155,7 @@ export class AuthService {
   static async login(data: LoginData) {
     const { email, password } = data;
 
-    const user = await User.findOne({ email }).select("+password");
+    const user = await userRepository.findByEmailWithPassword(email);
 
     if (!user) {
       const error: AppError = new Error("Invalid email or password");
@@ -176,7 +180,7 @@ export class AuthService {
     }
 
     // Update last login
-    await User.findByIdAndUpdate(user._id, { lastLoginAt: new Date() });
+    await userRepository.updateLastLogin(user._id.toString());
 
     const tokens = this.generateTokens(user._id.toString());
 
@@ -202,7 +206,8 @@ export class AuthService {
     try {
       const decoded = jwt.verify(refreshToken, config.jwt.refreshSecret) as any;
 
-      const user = await User.findById(decoded.userId).select(
+      const user = await userRepository.findByIdWithFields(
+        decoded.userId,
         "email role isVerified"
       );
 
@@ -222,16 +227,76 @@ export class AuthService {
   }
 
   static async verifyEmail(token: string) {
-    // In a real implementation, you'd store verification tokens in the database
-    // For this example, we'll simulate the verification process
+    if (!token) {
+      const error: AppError = new Error("Verification token is required");
+      error.statusCode = 400;
+      throw error;
+    }
 
-    const error: AppError = new Error("Invalid or expired verification token");
-    error.statusCode = 400;
-    throw error;
+    // Find user by verification token
+    const user = await userRepository.findByVerificationToken(token);
+
+    if (!user) {
+      const error: AppError = new Error("Invalid or expired verification token");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Check if already verified
+    if (user.isVerified) {
+      return {
+        message: "Email already verified. You can now log in.",
+      };
+    }
+
+    // Verify the user and clear verification token
+    await userRepository.verifyUserEmail(user._id.toString());
+
+    return {
+      message: "Email verified successfully! You can now log in.",
+    };
+  }
+
+  static async resendVerificationEmail(email: string) {
+    const user = await userRepository.findByEmail(email);
+
+    if (!user) {
+      // Don't reveal if email exists for security
+      return {
+        message:
+          "If an account with that email exists and is not verified, we have sent a verification email.",
+      };
+    }
+
+    // Check if already verified
+    if (user.isVerified) {
+      const error: AppError = new Error("Email is already verified");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Update user with new token
+    await userRepository.updateVerificationToken(
+      user._id.toString(),
+      verificationToken,
+      verificationTokenExpiry
+    );
+
+    // Send verification email
+    await this.sendVerificationEmail(user.email, verificationToken);
+
+    return {
+      message:
+        "If an account with that email exists and is not verified, we have sent a verification email.",
+    };
   }
 
   static async forgotPassword(email: string) {
-    const user = await User.findOne({ email });
+    const user = await userRepository.findByEmail(email);
 
     if (!user) {
       // Don't reveal if email exists for security
@@ -241,11 +306,18 @@ export class AuthService {
       };
     }
 
+    // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
-    // In a real implementation, store reset token in database
+    // Store reset token in database
+    await userRepository.updateResetPasswordToken(
+      user._id.toString(),
+      resetToken,
+      resetTokenExpiry
+    );
 
+    // Send password reset email
     await this.sendPasswordResetEmail(email, resetToken);
 
     return {
@@ -255,21 +327,34 @@ export class AuthService {
   }
 
   static async resetPassword(token: string, newPassword: string) {
-    // In a real implementation, verify reset token from database
+    if (!token) {
+      const error: AppError = new Error("Reset token is required");
+      error.statusCode = 400;
+      throw error;
+    }
 
+    if (!newPassword || newPassword.length < 8) {
+      const error: AppError = new Error("Password must be at least 8 characters long");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Find user by reset token
+    const user = await userRepository.findByResetPasswordToken(token);
+
+    if (!user) {
+      const error: AppError = new Error("Invalid or expired reset token");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Hash new password
     const hashedPassword = await this.hashPassword(newPassword);
 
-    // Update user password
-    // await prisma.user.update({
-    //   where: { resetToken: token },
-    //   data: {
-    //     password: hashedPassword,
-    //     resetToken: null,
-    //     resetTokenExpiry: null
-    //   }
-    // });
+    // Update user password and clear reset token
+    await userRepository.resetPassword(user._id.toString(), hashedPassword);
 
-    return { message: "Password reset successful" };
+    return { message: "Password reset successful. You can now log in with your new password." };
   }
 
   private static async sendVerificationEmail(email: string, token: string) {
@@ -311,11 +396,34 @@ export class AuthService {
       to: email,
       subject: "Reset your password - Behavioral Learning Platform",
       html: `
-        <h1>Password Reset Request</h1>
-        <p>You requested to reset your password. Click the link below to reset it:</p>
-        <a href="${resetUrl}">Reset Password</a>
-        <p>This link will expire in 1 hour.</p>
-        <p>If you didn't request this, you can safely ignore this email.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #3b82f6;">Password Reset Request</h1>
+          <p>You requested to reset your password for your Behavioral Learning Platform account.</p>
+
+          <p>Click the button below to reset your password:</p>
+
+          <div style="margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Reset Password
+            </a>
+          </div>
+
+          <p>Or copy and paste this link into your browser:</p>
+          <p style="color: #64748b; word-break: break-all;">${resetUrl}</p>
+
+          <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px; margin: 20px 0;">
+            <p style="margin: 0; color: #991b1b;">
+              <strong>Important:</strong> This link will expire in 1 hour for security reasons.
+            </p>
+          </div>
+
+          <p>If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
+
+          <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
+            Best regards,<br>
+            The Behavioral Learning Platform Team
+          </p>
+        </div>
       `,
     });
   }
