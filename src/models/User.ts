@@ -41,6 +41,22 @@ const userSchema = new Schema<IUser>({
     type: Boolean,
     default: false
   },
+  verificationToken: {
+    type: String,
+    select: false
+  },
+  verificationTokenExpiry: {
+    type: Date,
+    select: false
+  },
+  resetPasswordToken: {
+    type: String,
+    select: false
+  },
+  resetPasswordTokenExpiry: {
+    type: Date,
+    select: false
+  },
   subscriptionTier: {
     type: String,
     enum: Object.values(SubscriptionTier),
@@ -120,6 +136,8 @@ userSchema.index({ subscriptionTier: 1 });
 userSchema.index({ subjects: 1 });
 userSchema.index({ rating: -1 });
 userSchema.index({ createdAt: -1 });
+userSchema.index({ verificationToken: 1 });
+userSchema.index({ resetPasswordToken: 1 });
 
 // Virtual for children (for parents)
 userSchema.virtual('children', {

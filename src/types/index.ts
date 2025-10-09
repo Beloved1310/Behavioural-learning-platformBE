@@ -51,15 +51,19 @@ export interface IUser extends Document {
   dateOfBirth?: Date;
   profileImage?: string;
   isVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpiry?: Date;
+  resetPasswordToken?: string;
+  resetPasswordTokenExpiry?: Date;
   subscriptionTier: SubscriptionTier;
   parentId?: Types.ObjectId;
-  
+
   // Student specific fields
   academicGoals: string[];
   streakCount: number;
   totalPoints: number;
   lastLoginAt?: Date;
-  
+
   // Tutor specific fields
   subjects: string[];
   hourlyRate?: number;
@@ -68,7 +72,7 @@ export interface IUser extends Document {
   rating: number;
   totalSessions: number;
   isBackgroundChecked: boolean;
-  
+
   createdAt: Date;
   updatedAt: Date;
 }

@@ -83,11 +83,29 @@ export class AuthController {
       });
     }
 
-    await AuthService.verifyEmail(token);
+    const result = await AuthService.verifyEmail(token);
 
     res.json({
       success: true,
-      message: 'Email verified successfully'
+      message: result.message
+    });
+  });
+
+  static resendVerificationEmail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email is required'
+      });
+    }
+
+    const result = await AuthService.resendVerificationEmail(email);
+
+    res.json({
+      success: true,
+      message: result.message
     });
   });
 
