@@ -1,0 +1,12 @@
+POST http://localhost:3001/v1/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "adeoluwafisayomi@gmail.com",
+  "password": "3949oreoluwA!",
+  "firstName": "Adefisayo",
+  "lastName": "Adejumo",
+  "parentEmail": "adeoluwafisayomi@gmail.com",
+  "role": "STUDENT",
+  "dateOfBirth": "2009-10-05"
+}
