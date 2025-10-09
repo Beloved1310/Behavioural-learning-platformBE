@@ -53,7 +53,12 @@ export declare class AuthService {
         accessToken: string;
         refreshToken: string;
     }>;
-    static verifyEmail(token: string): Promise<void>;
+    static verifyEmail(token: string): Promise<{
+        message: string;
+    }>;
+    static resendVerificationEmail(email: string): Promise<{
+        message: string;
+    }>;
     static forgotPassword(email: string): Promise<{
         message: string;
     }>;

@@ -72,10 +72,24 @@ AuthController.verifyEmail = (0, errorHandler_1.asyncHandler)(async (req, res, n
             error: 'Verification token is required'
         });
     }
-    await authService_1.AuthService.verifyEmail(token);
+    const result = await authService_1.AuthService.verifyEmail(token);
     res.json({
         success: true,
-        message: 'Email verified successfully'
+        message: result.message
+    });
+});
+AuthController.resendVerificationEmail = (0, errorHandler_1.asyncHandler)(async (req, res, next) => {
+    const { email } = req.body;
+    if (!email) {
+        return res.status(400).json({
+            success: false,
+            error: 'Email is required'
+        });
+    }
+    const result = await authService_1.AuthService.resendVerificationEmail(email);
+    res.json({
+        success: true,
+        message: result.message
     });
 });
 AuthController.forgotPassword = (0, errorHandler_1.asyncHandler)(async (req, res, next) => {

@@ -7,8 +7,7 @@ const userPreferencesSchema = new mongoose_1.Schema({
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
-        unique: true,
-        index: true
+        unique: true
     },
     studyReminders: {
         type: Boolean,
@@ -50,7 +49,6 @@ const userPreferencesSchema = new mongoose_1.Schema({
 }, {
     timestamps: true
 });
-// Index for efficient lookups
-userPreferencesSchema.index({ userId: 1 });
+// Note: userId already has unique index from schema definition
 exports.UserPreferences = (0, mongoose_1.model)('UserPreferences', userPreferencesSchema);
 //# sourceMappingURL=UserPreferences.js.map

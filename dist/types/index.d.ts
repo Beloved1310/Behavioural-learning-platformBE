@@ -44,6 +44,10 @@ export interface IUser extends Document {
     dateOfBirth?: Date;
     profileImage?: string;
     isVerified: boolean;
+    verificationToken?: string;
+    verificationTokenExpiry?: Date;
+    resetPasswordToken?: string;
+    resetPasswordTokenExpiry?: Date;
     subscriptionTier: SubscriptionTier;
     parentId?: Types.ObjectId;
     academicGoals: string[];

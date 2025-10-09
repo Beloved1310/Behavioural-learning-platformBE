@@ -15,8 +15,7 @@ const fileSchema = new mongoose_1.Schema({
     },
     mimeType: {
         type: String,
-        required: true,
-        index: true
+        required: true
     },
     size: {
         type: Number,
@@ -31,8 +30,7 @@ const fileSchema = new mongoose_1.Schema({
     uploadedBy: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     }
 }, {
     timestamps: { createdAt: true, updatedAt: false }

@@ -7,19 +7,16 @@ const sessionSchema = new mongoose_1.Schema({
     studentId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     },
     tutorId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     },
     subject: {
         type: String,
-        required: true,
-        index: true
+        required: true
     },
     title: {
         type: String,
@@ -33,8 +30,7 @@ const sessionSchema = new mongoose_1.Schema({
     },
     scheduledAt: {
         type: Date,
-        required: true,
-        index: true
+        required: true
     },
     duration: {
         type: Number,
@@ -45,8 +41,7 @@ const sessionSchema = new mongoose_1.Schema({
     status: {
         type: String,
         enum: Object.values(types_1.SessionStatus),
-        default: types_1.SessionStatus.SCHEDULED,
-        index: true
+        default: types_1.SessionStatus.SCHEDULED
     },
     meetingUrl: {
         type: String

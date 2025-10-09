@@ -6,13 +6,11 @@ const notificationSchema = new mongoose_1.Schema({
     userId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     },
     type: {
         type: String,
         required: true,
-        index: true,
         enum: [
             'study_reminder',
             'session_reminder',
@@ -40,8 +38,7 @@ const notificationSchema = new mongoose_1.Schema({
     },
     isRead: {
         type: Boolean,
-        default: false,
-        index: true
+        default: false
     }
 }, {
     timestamps: { createdAt: true, updatedAt: false }
