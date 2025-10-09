@@ -7,13 +7,11 @@ const paymentSchema = new mongoose_1.Schema({
     userId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     },
     sessionId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'Session',
-        index: true
+        ref: 'Session'
     },
     amount: {
         type: Number,

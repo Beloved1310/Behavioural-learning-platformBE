@@ -16,8 +16,6 @@ class Database {
     async connect() {
         try {
             const options = {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
                 autoIndex: true,
                 maxPoolSize: 10,
                 serverSelectionTimeoutMS: 5000,

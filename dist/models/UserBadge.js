@@ -6,19 +6,16 @@ const userBadgeSchema = new mongoose_1.Schema({
     userId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     },
     badgeId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Badge',
-        required: true,
-        index: true
+        required: true
     },
     earnedAt: {
         type: Date,
-        default: Date.now,
-        index: true
+        default: Date.now
     }
 }, {
     timestamps: false

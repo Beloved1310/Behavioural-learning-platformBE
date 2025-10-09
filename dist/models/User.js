@@ -9,8 +9,7 @@ const userSchema = new mongoose_1.Schema({
         required: true,
         unique: true,
         lowercase: true,
-        trim: true,
-        index: true
+        trim: true
     },
     password: {
         type: String,
@@ -32,8 +31,7 @@ const userSchema = new mongoose_1.Schema({
     role: {
         type: String,
         enum: Object.values(types_1.UserRole),
-        required: true,
-        index: true
+        required: true
     },
     dateOfBirth: {
         type: Date
@@ -43,14 +41,28 @@ const userSchema = new mongoose_1.Schema({
     },
     isVerified: {
         type: Boolean,
-        default: false,
-        index: true
+        default: false
+    },
+    verificationToken: {
+        type: String,
+        select: false
+    },
+    verificationTokenExpiry: {
+        type: Date,
+        select: false
+    },
+    resetPasswordToken: {
+        type: String,
+        select: false
+    },
+    resetPasswordTokenExpiry: {
+        type: Date,
+        select: false
     },
     subscriptionTier: {
         type: String,
         enum: Object.values(types_1.SubscriptionTier),
-        default: types_1.SubscriptionTier.BASIC,
-        index: true
+        default: types_1.SubscriptionTier.BASIC
     },
     parentId: {
         type: mongoose_1.Schema.Types.ObjectId,
@@ -116,13 +128,15 @@ const userSchema = new mongoose_1.Schema({
     }
 });
 // Indexes for performance
-userSchema.index({ email: 1 });
+// Note: email already has unique index from schema definition
 userSchema.index({ role: 1 });
 userSchema.index({ isVerified: 1 });
 userSchema.index({ subscriptionTier: 1 });
 userSchema.index({ subjects: 1 });
 userSchema.index({ rating: -1 });
 userSchema.index({ createdAt: -1 });
+userSchema.index({ verificationToken: 1 });
+userSchema.index({ resetPasswordToken: 1 });
 // Virtual for children (for parents)
 userSchema.virtual('children', {
     ref: 'User',

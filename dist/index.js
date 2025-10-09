@@ -70,7 +70,7 @@ app.use('/api', (req, res) => {
 });
 // Routes
 const auth_1 = __importDefault(require("./routes/auth"));
-app.use('/api/auth', auth_1.default);
+app.use('/v1/api/auth', auth_1.default);
 // app.use('/api/users', userRoutes);
 // app.use('/api/sessions', sessionRoutes);
 // app.use('/api/chat', chatRoutes);

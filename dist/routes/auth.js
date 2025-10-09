@@ -10,6 +10,7 @@ router.post('/login', authController_1.AuthController.login);
 router.post('/refresh', authController_1.AuthController.refreshToken);
 router.post('/logout', authController_1.AuthController.logout);
 router.get('/verify-email', authController_1.AuthController.verifyEmail);
+router.post('/resend-verification', authController_1.AuthController.resendVerificationEmail);
 router.post('/forgot-password', authController_1.AuthController.forgotPassword);
 router.post('/reset-password', authController_1.AuthController.resetPassword);
 // Protected routes

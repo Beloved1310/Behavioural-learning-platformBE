@@ -6,8 +6,7 @@ const behavioralDataSchema = new mongoose_1.Schema({
     userId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     },
     sessionDuration: {
         type: Number,
@@ -34,8 +33,7 @@ const behavioralDataSchema = new mongoose_1.Schema({
     },
     timestamp: {
         type: Date,
-        default: Date.now,
-        index: true
+        default: Date.now
     }
 }, {
     timestamps: false

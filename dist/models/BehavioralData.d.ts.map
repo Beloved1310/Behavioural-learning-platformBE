@@ -1,1 +1,1 @@
-{"version":3,"file":"BehavioralData.d.ts","sourceRoot":"","sources":["../../src/models/BehavioralData.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,eAAe,EAAE,MAAM,UAAU,CAAC;AAgJ3C,eAAO,MAAM,cAAc;;;;OAAiE,CAAC"}
+{"version":3,"file":"BehavioralData.d.ts","sourceRoot":"","sources":["../../src/models/BehavioralData.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,eAAe,EAAE,MAAM,UAAU,CAAC;AA8I3C,eAAO,MAAM,cAAc;;;;OAAiE,CAAC"}

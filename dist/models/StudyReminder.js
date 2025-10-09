@@ -6,8 +6,7 @@ const studyReminderSchema = new mongoose_1.Schema({
     userId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     },
     title: {
         type: String,
@@ -21,8 +20,7 @@ const studyReminderSchema = new mongoose_1.Schema({
     },
     scheduledAt: {
         type: Date,
-        required: true,
-        index: true
+        required: true
     },
     isRecurring: {
         type: Boolean,
@@ -37,8 +35,7 @@ const studyReminderSchema = new mongoose_1.Schema({
     },
     isActive: {
         type: Boolean,
-        default: true,
-        index: true
+        default: true
     }
 }, {
     timestamps: { createdAt: true, updatedAt: false }
