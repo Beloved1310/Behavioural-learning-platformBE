@@ -63,11 +63,10 @@ class UserRepository extends BaseRepository_1.BaseRepository {
      * Verify user and clear verification token
      */
     async verifyUserEmail(userId) {
-        return await this.updateById(userId, {
+        return await this.model.findByIdAndUpdate(userId, {
             isVerified: true,
-            verificationToken: undefined,
-            verificationTokenExpiry: undefined,
-        });
+            $unset: { verificationToken: '', verificationTokenExpiry: '' },
+        }, { new: true });
     }
     /**
      * Update verification token
@@ -102,11 +101,10 @@ class UserRepository extends BaseRepository_1.BaseRepository {
      * Reset password and clear reset token
      */
     async resetPassword(userId, hashedPassword) {
-        return await this.updateById(userId, {
+        return await this.model.findByIdAndUpdate(userId, {
             password: hashedPassword,
-            resetPasswordToken: undefined,
-            resetPasswordTokenExpiry: undefined,
-        });
+            $unset: { resetPasswordToken: '', resetPasswordTokenExpiry: '' },
+        }, { new: true });
     }
 }
 // Export singleton instance

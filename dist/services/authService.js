@@ -10,6 +10,7 @@ const crypto_1 = __importDefault(require("crypto"));
 const types_1 = require("../types");
 const config_1 = __importDefault(require("../config"));
 const emailService_1 = require("./emailService");
+const errorHandler_1 = require("../middleware/errorHandler");
 const UserRepository_1 = require("../repositories/UserRepository");
 const UserPreferencesRepository_1 = require("../repositories/UserPreferencesRepository");
 class AuthService {
@@ -29,23 +30,17 @@ class AuthService {
         // Check if user already exists
         const existingUser = await UserRepository_1.userRepository.findByEmail(email);
         if (existingUser) {
-            const error = new Error("User with this email already exists");
-            error.statusCode = 400;
-            throw error;
+            throw new errorHandler_1.AppError("User with this email already exists", 400);
         }
         // Validate age for students
         if (role === types_1.UserRole.STUDENT && dateOfBirth) {
             const age = new Date().getFullYear() - new Date(dateOfBirth).getFullYear();
             if (age < 13 || age > 18) {
-                const error = new Error("Students must be between 13 and 18 years old");
-                error.statusCode = 400;
-                throw error;
+                throw new errorHandler_1.AppError("Students must be between 13 and 18 years old", 400);
             }
             // For minors, require parent email
             if (age < 18 && !parentEmail) {
-                const error = new Error("Parent email is required for users under 18");
-                error.statusCode = 400;
-                throw error;
+                throw new errorHandler_1.AppError("Parent email is required for users under 18", 400);
             }
         }
         const hashedPassword = await this.hashPassword(password);
@@ -99,20 +94,14 @@ class AuthService {
         const { email, password } = data;
         const user = await UserRepository_1.userRepository.findByEmailWithPassword(email);
         if (!user) {
-            const error = new Error("Invalid email or password");
-            error.statusCode = 401;
-            throw error;
+            throw new errorHandler_1.AppError("Invalid email or password", 401);
         }
         const isPasswordValid = await this.comparePassword(password, user.password);
         if (!isPasswordValid) {
-            const error = new Error("Invalid email or password");
-            error.statusCode = 401;
-            throw error;
+            throw new errorHandler_1.AppError("Invalid email or password", 401);
         }
         if (!user.isVerified) {
-            const error = new Error("Please verify your email address before logging in");
-            error.statusCode = 401;
-            throw error;
+            throw new errorHandler_1.AppError("Please verify your email address before logging in", 401);
         }
         // Update last login
         await UserRepository_1.userRepository.updateLastLogin(user._id.toString());
@@ -138,31 +127,23 @@ class AuthService {
             const decoded = jsonwebtoken_1.default.verify(refreshToken, config_1.default.jwt.refreshSecret);
             const user = await UserRepository_1.userRepository.findByIdWithFields(decoded.userId, "email role isVerified");
             if (!user || !user.isVerified) {
-                const error = new Error("Invalid refresh token");
-                error.statusCode = 401;
-                throw error;
+                throw new errorHandler_1.AppError("Invalid refresh token", 401);
             }
             const tokens = this.generateTokens(user._id.toString());
             return tokens;
         }
         catch (error) {
-            const authError = new Error("Invalid refresh token");
-            authError.statusCode = 401;
-            throw authError;
+            throw new errorHandler_1.AppError("Invalid refresh token", 401);
         }
     }
     static async verifyEmail(token) {
         if (!token) {
-            const error = new Error("Verification token is required");
-            error.statusCode = 400;
-            throw error;
+            throw new errorHandler_1.AppError("Verification token is required", 400);
         }
         // Find user by verification token
         const user = await UserRepository_1.userRepository.findByVerificationToken(token);
         if (!user) {
-            const error = new Error("Invalid or expired verification token");
-            error.statusCode = 400;
-            throw error;
+            throw new errorHandler_1.AppError("Invalid or expired verification token", 400);
         }
         // Check if already verified
         if (user.isVerified) {
@@ -186,9 +167,7 @@ class AuthService {
         }
         // Check if already verified
         if (user.isVerified) {
-            const error = new Error("Email is already verified");
-            error.statusCode = 400;
-            throw error;
+            throw new errorHandler_1.AppError("Email is already verified", 400);
         }
         // Generate new verification token
         const verificationToken = crypto_1.default.randomBytes(32).toString("hex");
@@ -222,21 +201,15 @@ class AuthService {
     }
     static async resetPassword(token, newPassword) {
         if (!token) {
-            const error = new Error("Reset token is required");
-            error.statusCode = 400;
-            throw error;
+            throw new errorHandler_1.AppError("Reset token is required", 400);
         }
         if (!newPassword || newPassword.length < 8) {
-            const error = new Error("Password must be at least 8 characters long");
-            error.statusCode = 400;
-            throw error;
+            throw new errorHandler_1.AppError("Password must be at least 8 characters long", 400);
         }
         // Find user by reset token
         const user = await UserRepository_1.userRepository.findByResetPasswordToken(token);
         if (!user) {
-            const error = new Error("Invalid or expired reset token");
-            error.statusCode = 400;
-            throw error;
+            throw new errorHandler_1.AppError("Invalid or expired reset token", 400);
         }
         // Hash new password
         const hashedPassword = await this.hashPassword(newPassword);

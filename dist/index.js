@@ -52,6 +52,8 @@ if (config_1.default.nodeEnv === 'development') {
 else {
     app.use((0, morgan_1.default)('combined'));
 }
+// Webhook endpoint needs raw body (must be before other body parsers)
+app.use('/v1/api/webhook/stripe', express_1.default.raw({ type: 'application/json' }));
 // Body parsing
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
@@ -70,13 +72,21 @@ app.use('/api', (req, res) => {
 });
 // Routes
 const auth_1 = __importDefault(require("./routes/auth"));
+const gamification_1 = __importDefault(require("./routes/gamification"));
+const chat_1 = __importDefault(require("./routes/chat"));
+const sessions_1 = __importDefault(require("./routes/sessions"));
+const payments_1 = __importDefault(require("./routes/payments"));
+const users_1 = __importDefault(require("./routes/users"));
+const preferences_1 = __importDefault(require("./routes/preferences"));
+const behavioral_1 = __importDefault(require("./routes/behavioral"));
 app.use('/v1/api/auth', auth_1.default);
-// app.use('/api/users', userRoutes);
-// app.use('/api/sessions', sessionRoutes);
-// app.use('/api/chat', chatRoutes);
-// app.use('/api/quizzes', quizRoutes);
-// app.use('/api/gamification', gamificationRoutes);
-// app.use('/api/payments', paymentRoutes);
+app.use('/v1/api/gamification', gamification_1.default);
+app.use('/v1/api/chat', chat_1.default);
+app.use('/v1/api', sessions_1.default);
+app.use('/v1/api/users', users_1.default);
+app.use('/v1/api/payments', payments_1.default);
+app.use('/v1/api/preferences', preferences_1.default);
+app.use('/v1/api/behavioral', behavioral_1.default);
 // app.use('/api/analytics', analyticsRoutes);
 // Setup Socket.IO
 (0, socket_1.setupSocketIO)(io);
