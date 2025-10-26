@@ -66,9 +66,7 @@ export class AuthService {
     const existingUser = await userRepository.findByEmail(email);
 
     if (existingUser) {
-      const error: AppError = new Error("User with this email already exists");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("User with this email already exists", 400);
     }
 
     // Validate age for students
@@ -76,20 +74,12 @@ export class AuthService {
       const age =
         new Date().getFullYear() - new Date(dateOfBirth).getFullYear();
       if (age < 13 || age > 18) {
-        const error: AppError = new Error(
-          "Students must be between 13 and 18 years old"
-        );
-        error.statusCode = 400;
-        throw error;
+        throw new AppError("Students must be between 13 and 18 years old", 400);
       }
 
       // For minors, require parent email
       if (age < 18 && !parentEmail) {
-        const error: AppError = new Error(
-          "Parent email is required for users under 18"
-        );
-        error.statusCode = 400;
-        throw error;
+        throw new AppError("Parent email is required for users under 18", 400);
       }
     }
 
@@ -158,25 +148,17 @@ export class AuthService {
     const user = await userRepository.findByEmailWithPassword(email);
 
     if (!user) {
-      const error: AppError = new Error("Invalid email or password");
-      error.statusCode = 401;
-      throw error;
+      throw new AppError("Invalid email or password", 401);
     }
 
     const isPasswordValid = await this.comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      const error: AppError = new Error("Invalid email or password");
-      error.statusCode = 401;
-      throw error;
+      throw new AppError("Invalid email or password", 401);
     }
 
     if (!user.isVerified) {
-      const error: AppError = new Error(
-        "Please verify your email address before logging in"
-      );
-      error.statusCode = 401;
-      throw error;
+      throw new AppError("Please verify your email address before logging in", 401);
     }
 
     // Update last login
@@ -212,34 +194,26 @@ export class AuthService {
       );
 
       if (!user || !user.isVerified) {
-        const error: AppError = new Error("Invalid refresh token");
-        error.statusCode = 401;
-        throw error;
+        throw new AppError("Invalid refresh token", 401);
       }
 
       const tokens = this.generateTokens(user._id.toString());
       return tokens;
     } catch (error) {
-      const authError: AppError = new Error("Invalid refresh token");
-      authError.statusCode = 401;
-      throw authError;
+      throw new AppError("Invalid refresh token", 401);
     }
   }
 
   static async verifyEmail(token: string) {
     if (!token) {
-      const error: AppError = new Error("Verification token is required");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Verification token is required", 400);
     }
 
     // Find user by verification token
     const user = await userRepository.findByVerificationToken(token);
 
     if (!user) {
-      const error: AppError = new Error("Invalid or expired verification token");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Invalid or expired verification token", 400);
     }
 
     // Check if already verified
@@ -270,9 +244,7 @@ export class AuthService {
 
     // Check if already verified
     if (user.isVerified) {
-      const error: AppError = new Error("Email is already verified");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Email is already verified", 400);
     }
 
     // Generate new verification token
@@ -328,24 +300,18 @@ export class AuthService {
 
   static async resetPassword(token: string, newPassword: string) {
     if (!token) {
-      const error: AppError = new Error("Reset token is required");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Reset token is required", 400);
     }
 
     if (!newPassword || newPassword.length < 8) {
-      const error: AppError = new Error("Password must be at least 8 characters long");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Password must be at least 8 characters long", 400);
     }
 
     // Find user by reset token
     const user = await userRepository.findByResetPasswordToken(token);
 
     if (!user) {
-      const error: AppError = new Error("Invalid or expired reset token");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Invalid or expired reset token", 400);
     }
 
     // Hash new password

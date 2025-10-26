@@ -52,4 +52,13 @@ export declare const getUserNotificationsSchema: {
 export declare const markNotificationReadSchema: {
     params: Joi.ObjectSchema<any>;
 };
+export declare const updateProfileSchema: {
+    body: Joi.ObjectSchema<any>;
+};
+export declare const updatePasswordSchema: {
+    body: Joi.ObjectSchema<any>;
+};
+export declare const deleteAccountSchema: {
+    body: Joi.ObjectSchema<any>;
+};
 //# sourceMappingURL=user.d.ts.map

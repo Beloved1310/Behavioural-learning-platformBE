@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose';
+import bcrypt from 'bcryptjs';
 import { IUser, UserRole, SubscriptionTier } from '../types';
 
 const userSchema = new Schema<IUser>({
@@ -34,6 +35,9 @@ const userSchema = new Schema<IUser>({
   dateOfBirth: {
     type: Date
   },
+  phoneNumber: {
+    type: String
+  },
   profileImage: {
     type: String
   },
@@ -62,12 +66,24 @@ const userSchema = new Schema<IUser>({
     enum: Object.values(SubscriptionTier),
     default: SubscriptionTier.BASIC
   },
+  subscriptionStatus: {
+    type: String
+  },
   parentId: {
     type: Schema.Types.ObjectId,
     ref: 'User'
   },
-  
+  stripeCustomerId: {
+    type: String
+  },
+
   // Student specific fields
+  gradeLevel: {
+    type: String
+  },
+  learningStyle: {
+    type: String
+  },
   academicGoals: {
     type: [String],
     default: []
@@ -157,6 +173,30 @@ userSchema.methods.isMinor = function() {
   const age = Math.floor((Date.now() - this.dateOfBirth.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
   return age < 18;
 };
+
+// Instance method to compare password
+userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    return false;
+  }
+};
+
+// Hash password before saving
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
 
 // Static method to find tutors by subject
 userSchema.statics.findTutorsBySubject = function(subject: string) {
