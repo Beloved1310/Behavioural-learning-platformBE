@@ -11,8 +11,7 @@ const sessionSchema = new mongoose_1.Schema({
     },
     tutorId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        ref: 'User'
     },
     subject: {
         type: String,
@@ -27,6 +26,12 @@ const sessionSchema = new mongoose_1.Schema({
     description: {
         type: String,
         maxlength: 1000
+    },
+    type: {
+        type: String,
+        enum: Object.values(types_1.SessionType),
+        required: true,
+        default: types_1.SessionType.STUDY
     },
     scheduledAt: {
         type: Date,
@@ -48,7 +53,7 @@ const sessionSchema = new mongoose_1.Schema({
     },
     price: {
         type: Number,
-        required: true,
+        default: 0,
         min: 0
     },
     notes: {
@@ -63,6 +68,24 @@ const sessionSchema = new mongoose_1.Schema({
     feedback: {
         type: String,
         maxlength: 1000
+    },
+    isRecurring: {
+        type: Boolean,
+        default: false
+    },
+    recurringPattern: {
+        type: String,
+        enum: Object.values(types_1.RecurringPattern)
+    },
+    reminderEnabled: {
+        type: Boolean,
+        default: true
+    },
+    reminderTime: {
+        type: Number, // minutes before session
+        default: 15,
+        min: 5,
+        max: 1440 // max 24 hours
     }
 }, {
     timestamps: true
