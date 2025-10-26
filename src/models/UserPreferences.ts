@@ -44,6 +44,10 @@ const userPreferencesSchema = new Schema<IUserPreferences>({
   progressReports: {
     type: Boolean,
     default: true
+  },
+  weeklyReport: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true

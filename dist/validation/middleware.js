@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.commonOptions = exports.validateObjectId = exports.validate = void 0;
+const errorHandler_1 = require("../middleware/errorHandler");
 const validate = (schema) => {
     return (req, res, next) => {
         const errors = [];
@@ -50,9 +51,7 @@ const validateObjectId = (paramName = 'id') => {
     return (req, res, next) => {
         const id = req.params[paramName];
         if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
-            const error = new Error(`Invalid ${paramName} format`);
-            error.statusCode = 400;
-            return next(error);
+            return next(new errorHandler_1.AppError(`Invalid ${paramName} format`, 400));
         }
         next();
     };
