@@ -190,3 +190,63 @@ export const markNotificationReadSchema = {
     notificationId: commonFields.objectId.required()
   })
 };
+
+// Update profile validation (for current user)
+export const updateProfileSchema = {
+  body: Joi.object({
+    firstName: commonFields.optionalName,
+    lastName: commonFields.optionalName,
+    phoneNumber: commonFields.phone.allow(''),
+    dateOfBirth: commonFields.dateOfBirth,
+    profileImage: commonFields.url.allow(''),
+    // Student-specific fields
+    gradeLevel: Joi.string().valid(
+      'Year 7', 'Year 8', 'Year 9', 'Year 10', 'Year 11',
+      'Year 12', 'Year 13'
+    ).messages({
+      'any.only': 'Grade level must be a valid UK school year'
+    }),
+    learningStyle: Joi.string().valid(
+      'visual', 'auditory', 'kinesthetic', 'reading_writing'
+    ).messages({
+      'any.only': 'Learning style must be visual, auditory, kinesthetic, or reading_writing'
+    }),
+    academicGoals: Joi.alternatives().try(
+      commonFields.academicGoals,
+      Joi.string().allow('')
+    ),
+    // Tutor-specific fields
+    subjects: Joi.alternatives().try(
+      commonFields.subjects,
+      Joi.string().allow('')
+    ),
+    bio: commonFields.mediumText.allow(''),
+    qualifications: Joi.alternatives().try(
+      commonFields.qualifications,
+      Joi.string().allow('')
+    )
+  }).min(1).messages({
+    'object.min': 'At least one field must be provided for update'
+  })
+};
+
+// Update password validation
+export const updatePasswordSchema = {
+  body: Joi.object({
+    currentPassword: Joi.string().required().messages({
+      'string.empty': 'Current password is required'
+    }),
+    newPassword: commonFields.password.messages({
+      'string.empty': 'New password is required'
+    })
+  })
+};
+
+// Delete account validation
+export const deleteAccountSchema = {
+  body: Joi.object({
+    password: Joi.string().required().messages({
+      'string.empty': 'Password is required to delete account'
+    })
+  })
+};

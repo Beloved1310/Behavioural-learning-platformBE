@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.markNotificationReadSchema = exports.getUserNotificationsSchema = exports.updateChildSchema = exports.addChildSchema = exports.getUserChildrenSchema = exports.searchUsersSchema = exports.reportUserSchema = exports.blockUserSchema = exports.getUserStatsSchema = exports.followUserSchema = exports.uploadAvatarSchema = exports.getTutorsBySubjectSchema = exports.deleteUserSchema = exports.updateUserSchema = exports.getUserByIdSchema = exports.getUsersSchema = void 0;
+exports.deleteAccountSchema = exports.updatePasswordSchema = exports.updateProfileSchema = exports.markNotificationReadSchema = exports.getUserNotificationsSchema = exports.updateChildSchema = exports.addChildSchema = exports.getUserChildrenSchema = exports.searchUsersSchema = exports.reportUserSchema = exports.blockUserSchema = exports.getUserStatsSchema = exports.followUserSchema = exports.uploadAvatarSchema = exports.getTutorsBySubjectSchema = exports.deleteUserSchema = exports.updateUserSchema = exports.getUserByIdSchema = exports.getUsersSchema = void 0;
 const joi_1 = __importDefault(require("joi"));
 const common_1 = require("./common");
 const types_1 = require("../types");
@@ -163,6 +163,49 @@ exports.getUserNotificationsSchema = {
 exports.markNotificationReadSchema = {
     params: joi_1.default.object({
         notificationId: common_1.commonFields.objectId.required()
+    })
+};
+// Update profile validation (for current user)
+exports.updateProfileSchema = {
+    body: joi_1.default.object({
+        firstName: common_1.commonFields.optionalName,
+        lastName: common_1.commonFields.optionalName,
+        phoneNumber: common_1.commonFields.phone.allow(''),
+        dateOfBirth: common_1.commonFields.dateOfBirth,
+        profileImage: common_1.commonFields.url.allow(''),
+        // Student-specific fields
+        gradeLevel: joi_1.default.string().valid('Year 7', 'Year 8', 'Year 9', 'Year 10', 'Year 11', 'Year 12', 'Year 13').messages({
+            'any.only': 'Grade level must be a valid UK school year'
+        }),
+        learningStyle: joi_1.default.string().valid('visual', 'auditory', 'kinesthetic', 'reading_writing').messages({
+            'any.only': 'Learning style must be visual, auditory, kinesthetic, or reading_writing'
+        }),
+        academicGoals: joi_1.default.alternatives().try(common_1.commonFields.academicGoals, joi_1.default.string().allow('')),
+        // Tutor-specific fields
+        subjects: joi_1.default.alternatives().try(common_1.commonFields.subjects, joi_1.default.string().allow('')),
+        bio: common_1.commonFields.mediumText.allow(''),
+        qualifications: joi_1.default.alternatives().try(common_1.commonFields.qualifications, joi_1.default.string().allow(''))
+    }).min(1).messages({
+        'object.min': 'At least one field must be provided for update'
+    })
+};
+// Update password validation
+exports.updatePasswordSchema = {
+    body: joi_1.default.object({
+        currentPassword: joi_1.default.string().required().messages({
+            'string.empty': 'Current password is required'
+        }),
+        newPassword: common_1.commonFields.password.messages({
+            'string.empty': 'New password is required'
+        })
+    })
+};
+// Delete account validation
+exports.deleteAccountSchema = {
+    body: joi_1.default.object({
+        password: joi_1.default.string().required().messages({
+            'string.empty': 'Password is required to delete account'
+        })
     })
 };
 //# sourceMappingURL=user.js.map
