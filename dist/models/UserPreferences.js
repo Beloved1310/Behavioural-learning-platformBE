@@ -45,6 +45,10 @@ const userPreferencesSchema = new mongoose_1.Schema({
     progressReports: {
         type: Boolean,
         default: true
+    },
+    weeklyReport: {
+        type: Boolean,
+        default: true
     }
 }, {
     timestamps: true

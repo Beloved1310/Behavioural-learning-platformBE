@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const mongoose_1 = require("mongoose");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const types_1 = require("../types");
 const userSchema = new mongoose_1.Schema({
     email: {
@@ -36,6 +40,9 @@ const userSchema = new mongoose_1.Schema({
     dateOfBirth: {
         type: Date
     },
+    phoneNumber: {
+        type: String
+    },
     profileImage: {
         type: String
     },
@@ -64,11 +71,23 @@ const userSchema = new mongoose_1.Schema({
         enum: Object.values(types_1.SubscriptionTier),
         default: types_1.SubscriptionTier.BASIC
     },
+    subscriptionStatus: {
+        type: String
+    },
     parentId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User'
     },
+    stripeCustomerId: {
+        type: String
+    },
     // Student specific fields
+    gradeLevel: {
+        type: String
+    },
+    learningStyle: {
+        type: String
+    },
     academicGoals: {
         type: [String],
         default: []
@@ -154,6 +173,29 @@ userSchema.methods.isMinor = function () {
     const age = Math.floor((Date.now() - this.dateOfBirth.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
     return age < 18;
 };
+// Instance method to compare password
+userSchema.methods.comparePassword = async function (candidatePassword) {
+    try {
+        return await bcryptjs_1.default.compare(candidatePassword, this.password);
+    }
+    catch (error) {
+        return false;
+    }
+};
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) {
+        return next();
+    }
+    try {
+        const salt = await bcryptjs_1.default.genSalt(10);
+        this.password = await bcryptjs_1.default.hash(this.password, salt);
+        next();
+    }
+    catch (error) {
+        next(error);
+    }
+});
 // Static method to find tutors by subject
 userSchema.statics.findTutorsBySubject = function (subject) {
     return this.find({
