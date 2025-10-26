@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { ISession, SessionStatus } from '../types';
+import { ISession, SessionStatus, SessionType, RecurringPattern } from '../types';
 
 const sessionSchema = new Schema<ISession>({
   studentId: {
@@ -9,8 +9,7 @@ const sessionSchema = new Schema<ISession>({
   },
   tutorId: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
   },
   subject: {
     type: String,
@@ -25,6 +24,12 @@ const sessionSchema = new Schema<ISession>({
   description: {
     type: String,
     maxlength: 1000
+  },
+  type: {
+    type: String,
+    enum: Object.values(SessionType),
+    required: true,
+    default: SessionType.STUDY
   },
   scheduledAt: {
     type: Date,
@@ -46,7 +51,7 @@ const sessionSchema = new Schema<ISession>({
   },
   price: {
     type: Number,
-    required: true,
+    default: 0,
     min: 0
   },
   notes: {
@@ -61,6 +66,24 @@ const sessionSchema = new Schema<ISession>({
   feedback: {
     type: String,
     maxlength: 1000
+  },
+  isRecurring: {
+    type: Boolean,
+    default: false
+  },
+  recurringPattern: {
+    type: String,
+    enum: Object.values(RecurringPattern)
+  },
+  reminderEnabled: {
+    type: Boolean,
+    default: true
+  },
+  reminderTime: {
+    type: Number, // minutes before session
+    default: 15,
+    min: 5,
+    max: 1440 // max 24 hours
   }
 }, {
   timestamps: true
