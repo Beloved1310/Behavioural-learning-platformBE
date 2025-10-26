@@ -7,26 +7,21 @@ exports.optionalAuth = exports.authorize = exports.authenticate = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../config"));
 const models_1 = require("../models");
+const errorHandler_1 = require("./errorHandler");
 const authenticate = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            const error = new Error('No token provided');
-            error.statusCode = 401;
-            return next(error);
+            return next(new errorHandler_1.AppError('No token provided', 401));
         }
         const token = authHeader.substring(7);
         const decoded = jsonwebtoken_1.default.verify(token, config_1.default.jwt.secret);
         const user = await models_1.User.findById(decoded.userId).select('email role subscriptionTier isVerified');
         if (!user) {
-            const error = new Error('User not found');
-            error.statusCode = 401;
-            return next(error);
+            return next(new errorHandler_1.AppError('User not found', 401));
         }
         if (!user.isVerified) {
-            const error = new Error('Please verify your email address');
-            error.statusCode = 401;
-            return next(error);
+            return next(new errorHandler_1.AppError('Please verify your email address', 401));
         }
         if (user) {
             req.user = {
@@ -39,23 +34,17 @@ const authenticate = async (req, res, next) => {
         next();
     }
     catch (error) {
-        const authError = new Error('Invalid token');
-        authError.statusCode = 401;
-        next(authError);
+        next(new errorHandler_1.AppError('Invalid token', 401));
     }
 };
 exports.authenticate = authenticate;
 const authorize = (...roles) => {
     return (req, res, next) => {
         if (!req.user) {
-            const error = new Error('Authentication required');
-            error.statusCode = 401;
-            return next(error);
+            return next(new errorHandler_1.AppError('Authentication required', 401));
         }
         if (!roles.includes(req.user.role)) {
-            const error = new Error('Insufficient permissions');
-            error.statusCode = 403;
-            return next(error);
+            return next(new errorHandler_1.AppError('Insufficient permissions', 403));
         }
         next();
     };

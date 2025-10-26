@@ -1,6 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.asyncHandler = exports.notFound = exports.errorHandler = void 0;
+exports.asyncHandler = exports.notFound = exports.errorHandler = exports.AppError = void 0;
+class AppError extends Error {
+    constructor(message, statusCode = 500) {
+        super(message);
+        this.statusCode = statusCode;
+        this.isOperational = true;
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+exports.AppError = AppError;
 const errorHandler = (err, req, res, next) => {
     let statusCode = err.statusCode || 500;
     let message = err.message || 'Internal Server Error';
@@ -46,8 +55,7 @@ const errorHandler = (err, req, res, next) => {
 };
 exports.errorHandler = errorHandler;
 const notFound = (req, res, next) => {
-    const error = new Error(`Not found - ${req.originalUrl}`);
-    error.statusCode = 404;
+    const error = new AppError(`Not found - ${req.originalUrl}`, 404);
     next(error);
 };
 exports.notFound = notFound;
