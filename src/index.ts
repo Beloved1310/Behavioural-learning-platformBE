@@ -53,6 +53,9 @@ if (config.nodeEnv === 'development') {
   app.use(morgan('combined'));
 }
 
+// Webhook endpoint needs raw body (must be before other body parsers)
+app.use('/v1/api/webhook/stripe', express.raw({ type: 'application/json' }));
+
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -74,14 +77,23 @@ app.use('/api', (req, res) => {
 
 // Routes
 import authRoutes from './routes/auth';
+import gamificationRoutes from './routes/gamification';
+import chatRoutes from './routes/chat';
+import sessionsRoutes from './routes/sessions';
+import paymentRoutes from './routes/payments';
+import userRoutes from './routes/users';
+import preferencesRoutes from './routes/preferences';
+import behavioralRoutes from './routes/behavioral';
 
 app.use('/v1/api/auth', authRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/sessions', sessionRoutes);
-// app.use('/api/chat', chatRoutes);
-// app.use('/api/quizzes', quizRoutes);
-// app.use('/api/gamification', gamificationRoutes);
-// app.use('/api/payments', paymentRoutes);
+app.use('/v1/api/gamification', gamificationRoutes);
+app.use('/v1/api/chat', chatRoutes);
+app.use('/v1/api', sessionsRoutes);
+app.use('/v1/api/users', userRoutes);
+app.use('/v1/api/payments', paymentRoutes);
+app.use('/v1/api/preferences', preferencesRoutes);
+app.use('/v1/api/behavioral', behavioralRoutes);
+
 // app.use('/api/analytics', analyticsRoutes);
 
 // Setup Socket.IO
