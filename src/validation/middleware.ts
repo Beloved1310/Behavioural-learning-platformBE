@@ -61,13 +61,11 @@ export const validate = (schema: ValidationSchema) => {
 export const validateObjectId = (paramName: string = 'id') => {
   return (req: Request, res: Response, next: NextFunction) => {
     const id = req.params[paramName];
-    
+
     if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
-      const error: AppError = new Error(`Invalid ${paramName} format`);
-      error.statusCode = 400;
-      return next(error);
+      return next(new AppError(`Invalid ${paramName} format`, 400));
     }
-    
+
     next();
   };
 };
