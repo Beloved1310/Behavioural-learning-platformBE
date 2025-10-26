@@ -7,6 +7,8 @@ exports.sendNotificationToUser = exports.setupSocketIO = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../config"));
 const models_1 = require("../models");
+// Store for tracking online users
+const onlineUsers = new Map();
 const setupSocketIO = (io) => {
     // Authentication middleware for socket connections
     io.use(async (socket, next) => {
@@ -33,6 +35,20 @@ const setupSocketIO = (io) => {
         console.log(`User ${socket.userId} connected`);
         // Join user to their personal room
         socket.join(`user:${socket.userId}`);
+        // Track user as online
+        if (socket.userId) {
+            onlineUsers.set(socket.userId, {
+                socketId: socket.id,
+                status: 'online',
+                lastSeen: new Date()
+            });
+            // Broadcast online status to all connected clients
+            io.emit('user_online_status', {
+                userId: socket.userId,
+                status: 'online',
+                lastSeen: new Date().toISOString()
+            });
+        }
         // Handle joining chat rooms
         socket.on('join_chat', async (chatId) => {
             try {
@@ -101,6 +117,43 @@ const setupSocketIO = (io) => {
                 chatId
             });
         });
+        // Handle online status updates
+        socket.on('update_status', (status) => {
+            if (socket.userId) {
+                const userStatus = onlineUsers.get(socket.userId);
+                if (userStatus) {
+                    userStatus.status = status;
+                    userStatus.lastSeen = new Date();
+                    onlineUsers.set(socket.userId, userStatus);
+                    // Broadcast status update
+                    io.emit('user_online_status', {
+                        userId: socket.userId,
+                        status,
+                        lastSeen: new Date().toISOString()
+                    });
+                }
+            }
+        });
+        // Handle read receipts
+        socket.on('mark_messages_read', async (data) => {
+            try {
+                if (!socket.userId)
+                    return;
+                await models_1.Message.updateMany({
+                    chatId: data.chatId,
+                    senderId: { $ne: socket.userId },
+                    isRead: false
+                }, { isRead: true });
+                // Notify other participants
+                socket.to(`chat:${data.chatId}`).emit('messages_read', {
+                    chatId: data.chatId,
+                    userId: socket.userId
+                });
+            }
+            catch (error) {
+                console.error('Error marking messages as read:', error);
+            }
+        });
         // Handle session events
         socket.on('join_session', (sessionId) => {
             socket.join(`session:${sessionId}`);
@@ -126,8 +179,35 @@ const setupSocketIO = (io) => {
         // Handle disconnect
         socket.on('disconnect', () => {
             console.log(`User ${socket.userId} disconnected`);
+            // Update user status to offline
+            if (socket.userId) {
+                const userStatus = onlineUsers.get(socket.userId);
+                if (userStatus) {
+                    userStatus.status = 'offline';
+                    userStatus.lastSeen = new Date();
+                    onlineUsers.set(socket.userId, userStatus);
+                    // Broadcast offline status
+                    io.emit('user_online_status', {
+                        userId: socket.userId,
+                        status: 'offline',
+                        lastSeen: new Date().toISOString()
+                    });
+                }
+            }
         });
     });
+    // Expose function to get online users
+    io.getOnlineUsers = () => {
+        const users = [];
+        onlineUsers.forEach((value, userId) => {
+            users.push({
+                userId,
+                status: value.status,
+                lastSeen: value.lastSeen.toISOString()
+            });
+        });
+        return users;
+    };
     return io;
 };
 exports.setupSocketIO = setupSocketIO;

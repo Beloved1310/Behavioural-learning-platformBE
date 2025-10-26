@@ -10,17 +10,47 @@ export declare enum SubscriptionTier {
     PREMIUM = "PREMIUM"
 }
 export declare enum SessionStatus {
-    SCHEDULED = "SCHEDULED",
-    IN_PROGRESS = "IN_PROGRESS",
-    COMPLETED = "COMPLETED",
-    CANCELLED = "CANCELLED",
-    NO_SHOW = "NO_SHOW"
+    SCHEDULED = "scheduled",
+    IN_PROGRESS = "in_progress",
+    COMPLETED = "completed",
+    CANCELLED = "cancelled",
+    MISSED = "missed"
+}
+export declare enum SessionType {
+    STUDY = "study",
+    TUTORING = "tutoring",
+    QUIZ = "quiz",
+    READING = "reading"
+}
+export declare enum RecurringPattern {
+    DAILY = "daily",
+    WEEKLY = "weekly",
+    MONTHLY = "monthly"
 }
 export declare enum PaymentStatus {
-    PENDING = "PENDING",
-    COMPLETED = "COMPLETED",
-    FAILED = "FAILED",
-    REFUNDED = "REFUNDED"
+    PENDING = "pending",
+    COMPLETED = "completed",
+    FAILED = "failed",
+    REFUNDED = "refunded",
+    CANCELLED = "cancelled"
+}
+export declare enum SubscriptionStatus {
+    ACTIVE = "active",
+    CANCELLED = "cancelled",
+    PAST_DUE = "past_due",
+    EXPIRED = "expired",
+    TRIALING = "trialing"
+}
+export declare enum PaymentMethodType {
+    CARD = "card",
+    BANK_ACCOUNT = "bank_account",
+    PAYPAL = "paypal"
+}
+export declare enum RefundStatus {
+    PENDING = "pending",
+    APPROVED = "approved",
+    REJECTED = "rejected",
+    PROCESSED = "processed"
 }
 export declare enum MessageType {
     TEXT = "TEXT",
@@ -34,6 +64,23 @@ export declare enum BadgeType {
     ACHIEVEMENT = "ACHIEVEMENT",
     MILESTONE = "MILESTONE"
 }
+export declare enum BadgeCategory {
+    QUIZ = "quiz",
+    STREAK = "streak",
+    ACHIEVEMENT = "achievement",
+    SPECIAL = "special"
+}
+export declare enum BadgeRarity {
+    COMMON = "common",
+    RARE = "rare",
+    EPIC = "epic",
+    LEGENDARY = "legendary"
+}
+export declare enum QuizDifficulty {
+    EASY = "easy",
+    MEDIUM = "medium",
+    HARD = "hard"
+}
 export interface IUser extends Document {
     _id: Types.ObjectId;
     email: string;
@@ -42,6 +89,7 @@ export interface IUser extends Document {
     lastName: string;
     role: UserRole;
     dateOfBirth?: Date;
+    phoneNumber?: string;
     profileImage?: string;
     isVerified: boolean;
     verificationToken?: string;
@@ -49,7 +97,11 @@ export interface IUser extends Document {
     resetPasswordToken?: string;
     resetPasswordTokenExpiry?: Date;
     subscriptionTier: SubscriptionTier;
+    subscriptionStatus?: SubscriptionStatus;
     parentId?: Types.ObjectId;
+    stripeCustomerId?: string;
+    gradeLevel?: string;
+    learningStyle?: string;
     academicGoals: string[];
     streakCount: number;
     totalPoints: number;
@@ -63,6 +115,8 @@ export interface IUser extends Document {
     isBackgroundChecked: boolean;
     createdAt: Date;
     updatedAt: Date;
+    comparePassword(candidatePassword: string): Promise<boolean>;
+    isMinor(): boolean;
 }
 export interface IUserPreferences extends Document {
     _id: Types.ObjectId;
@@ -76,16 +130,18 @@ export interface IUserPreferences extends Document {
     smsNotifications: boolean;
     sessionReminders: boolean;
     progressReports: boolean;
+    weeklyReport: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
 export interface ISession extends Document {
     _id: Types.ObjectId;
     studentId: Types.ObjectId;
-    tutorId: Types.ObjectId;
+    tutorId?: Types.ObjectId;
     subject: string;
     title: string;
     description?: string;
+    type: SessionType;
     scheduledAt: Date;
     duration: number;
     status: SessionStatus;
@@ -94,8 +150,13 @@ export interface ISession extends Document {
     notes?: string;
     rating?: number;
     feedback?: string;
+    isRecurring: boolean;
+    recurringPattern?: RecurringPattern;
+    reminderEnabled: boolean;
+    reminderTime?: number;
     createdAt: Date;
     updatedAt: Date;
+    canBeCancelled(): boolean;
 }
 export interface IChat extends Document {
     _id: Types.ObjectId;
@@ -121,8 +182,15 @@ export interface IBadge extends Document {
     name: string;
     description: string;
     icon: string;
+    category: BadgeCategory;
+    rarity: BadgeRarity;
+    criteria: {
+        type: 'quiz_score' | 'quiz_count' | 'streak' | 'points' | 'perfect_score';
+        threshold: number;
+        subject?: string;
+    };
     requirement: number;
-    points: number;
+    pointsReward: number;
     isActive: boolean;
     createdAt: Date;
 }
@@ -137,6 +205,7 @@ export interface IQuiz extends Document {
     title: string;
     subject: string;
     description: string;
+    difficulty: QuizDifficulty;
     timeLimit?: number;
     passingScore: number;
     points: number;
@@ -160,6 +229,8 @@ export interface IQuizAttempt extends Document {
     quizId: Types.ObjectId;
     studentId: Types.ObjectId;
     score: number;
+    totalPoints: number;
+    percentage: number;
     completedAt: Date;
     timeSpent: number;
     answers: any;
@@ -235,5 +306,59 @@ export interface IFile extends Document {
     url: string;
     uploadedBy: Types.ObjectId;
     createdAt: Date;
+}
+export interface IUserProgress extends Document {
+    _id: Types.ObjectId;
+    userId: Types.ObjectId;
+    subject: string;
+    level: number;
+    currentXP: number;
+    nextLevelXP: number;
+    completedQuizzes: number;
+    averageScore: number;
+    studyTime: number;
+    lastActivity: Date;
+    createdAt: Date;
+    updatedAt: Date;
+}
+export interface IMoodLog extends Document {
+    _id: Types.ObjectId;
+    userId: Types.ObjectId;
+    mood: 'happy' | 'sad' | 'angry' | 'anxious' | 'excited' | 'calm' | 'frustrated' | 'confused' | 'confident' | 'neutral';
+    intensity: number;
+    context?: string;
+    tags: string[];
+    notes?: string;
+    timestamp: Date;
+    createdAt: Date;
+    updatedAt: Date;
+}
+export interface ICustomEvent extends Document {
+    _id: Types.ObjectId;
+    userId: Types.ObjectId;
+    eventType: string;
+    eventData: any;
+    page?: string;
+    sessionId?: string;
+    timestamp: Date;
+    createdAt: Date;
+    updatedAt: Date;
+}
+export interface IRecommendation extends Document {
+    _id: Types.ObjectId;
+    userId: Types.ObjectId;
+    type: 'content' | 'study_time' | 'break' | 'technique' | 'goal';
+    title: string;
+    description: string;
+    priority: number;
+    metadata: any;
+    isRead: boolean;
+    isActioned: boolean;
+    expiresAt?: Date;
+    generatedAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
+    markAsRead(): Promise<IRecommendation>;
+    markAsActioned(): Promise<IRecommendation>;
 }
 //# sourceMappingURL=index.d.ts.map

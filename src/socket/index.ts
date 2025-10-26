@@ -8,6 +8,9 @@ interface AuthenticatedSocket extends Socket {
   userRole?: string;
 }
 
+// Store for tracking online users
+const onlineUsers = new Map<string, { socketId: string; status: 'online' | 'away' | 'offline'; lastSeen: Date }>();
+
 export const setupSocketIO = (io: Server) => {
   // Authentication middleware for socket connections
   io.use(async (socket: AuthenticatedSocket, next) => {
@@ -40,6 +43,22 @@ export const setupSocketIO = (io: Server) => {
 
     // Join user to their personal room
     socket.join(`user:${socket.userId}`);
+
+    // Track user as online
+    if (socket.userId) {
+      onlineUsers.set(socket.userId, {
+        socketId: socket.id,
+        status: 'online',
+        lastSeen: new Date()
+      });
+
+      // Broadcast online status to all connected clients
+      io.emit('user_online_status', {
+        userId: socket.userId,
+        status: 'online',
+        lastSeen: new Date().toISOString()
+      });
+    }
 
     // Handle joining chat rooms
     socket.on('join_chat', async (chatId: string) => {
@@ -125,6 +144,49 @@ export const setupSocketIO = (io: Server) => {
       });
     });
 
+    // Handle online status updates
+    socket.on('update_status', (status: 'online' | 'away' | 'offline') => {
+      if (socket.userId) {
+        const userStatus = onlineUsers.get(socket.userId);
+        if (userStatus) {
+          userStatus.status = status;
+          userStatus.lastSeen = new Date();
+          onlineUsers.set(socket.userId, userStatus);
+
+          // Broadcast status update
+          io.emit('user_online_status', {
+            userId: socket.userId,
+            status,
+            lastSeen: new Date().toISOString()
+          });
+        }
+      }
+    });
+
+    // Handle read receipts
+    socket.on('mark_messages_read', async (data: { chatId: string }) => {
+      try {
+        if (!socket.userId) return;
+
+        await Message.updateMany(
+          {
+            chatId: data.chatId,
+            senderId: { $ne: socket.userId },
+            isRead: false
+          },
+          { isRead: true }
+        );
+
+        // Notify other participants
+        socket.to(`chat:${data.chatId}`).emit('messages_read', {
+          chatId: data.chatId,
+          userId: socket.userId
+        });
+      } catch (error) {
+        console.error('Error marking messages as read:', error);
+      }
+    });
+
     // Handle session events
     socket.on('join_session', (sessionId: string) => {
       socket.join(`session:${sessionId}`);
@@ -156,8 +218,38 @@ export const setupSocketIO = (io: Server) => {
     // Handle disconnect
     socket.on('disconnect', () => {
       console.log(`User ${socket.userId} disconnected`);
+
+      // Update user status to offline
+      if (socket.userId) {
+        const userStatus = onlineUsers.get(socket.userId);
+        if (userStatus) {
+          userStatus.status = 'offline';
+          userStatus.lastSeen = new Date();
+          onlineUsers.set(socket.userId, userStatus);
+
+          // Broadcast offline status
+          io.emit('user_online_status', {
+            userId: socket.userId,
+            status: 'offline',
+            lastSeen: new Date().toISOString()
+          });
+        }
+      }
     });
   });
+
+  // Expose function to get online users
+  (io as any).getOnlineUsers = () => {
+    const users: any[] = [];
+    onlineUsers.forEach((value, userId) => {
+      users.push({
+        userId,
+        status: value.status,
+        lastSeen: value.lastSeen.toISOString()
+      });
+    });
+    return users;
+  };
 
   return io;
 };

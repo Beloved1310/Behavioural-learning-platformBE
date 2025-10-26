@@ -7,10 +7,17 @@ export { Quiz } from './Quiz';
 export { QuizAttempt } from './QuizAttempt';
 export { Badge } from './Badge';
 export { UserBadge } from './UserBadge';
+export { UserProgress } from './UserProgress';
 export { Payment } from './Payment';
+export { default as Subscription } from './Subscription';
+export { default as PaymentMethod } from './PaymentMethod';
+export { default as RefundRequest } from './RefundRequest';
 export { BehavioralData } from './BehavioralData';
 export { ProgressReport } from './ProgressReport';
 export { Notification } from './Notification';
 export { StudyReminder } from './StudyReminder';
 export { File } from './File';
+export { MoodLog } from './MoodLog';
+export { CustomEvent } from './CustomEvent';
+export { Recommendation } from './Recommendation';
 //# sourceMappingURL=index.d.ts.map

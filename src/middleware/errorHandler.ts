@@ -1,8 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 
-export interface AppError extends Error {
-  statusCode?: number;
-  isOperational?: boolean;
+export class AppError extends Error {
+  statusCode: number;
+  isOperational: boolean;
+
+  constructor(message: string, statusCode: number = 500) {
+    super(message);
+    this.statusCode = statusCode;
+    this.isOperational = true;
+    Error.captureStackTrace(this, this.constructor);
+  }
 }
 
 export const errorHandler = (
@@ -58,8 +65,7 @@ export const errorHandler = (
 };
 
 export const notFound = (req: Request, res: Response, next: NextFunction) => {
-  const error: AppError = new Error(`Not found - ${req.originalUrl}`);
-  error.statusCode = 404;
+  const error = new AppError(`Not found - ${req.originalUrl}`, 404);
   next(error);
 };
 
