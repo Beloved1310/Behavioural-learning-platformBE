@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Quiz = void 0;
 const mongoose_1 = require("mongoose");
+const types_1 = require("../types");
 const questionSchema = new mongoose_1.Schema({
     type: {
         type: String,
@@ -54,6 +55,12 @@ const quizSchema = new mongoose_1.Schema({
         type: String,
         required: true,
         maxlength: 1000
+    },
+    difficulty: {
+        type: String,
+        enum: Object.values(types_1.QuizDifficulty),
+        required: true,
+        index: true
     },
     timeLimit: {
         type: Number, // in minutes

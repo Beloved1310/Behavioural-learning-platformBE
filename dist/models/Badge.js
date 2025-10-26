@@ -26,12 +26,39 @@ const badgeSchema = new mongoose_1.Schema({
         type: String,
         required: true
     },
+    category: {
+        type: String,
+        enum: Object.values(types_1.BadgeCategory),
+        required: true,
+        index: true
+    },
+    rarity: {
+        type: String,
+        enum: Object.values(types_1.BadgeRarity),
+        required: true,
+        default: types_1.BadgeRarity.COMMON
+    },
+    criteria: {
+        type: {
+            type: String,
+            enum: ['quiz_score', 'quiz_count', 'streak', 'points', 'perfect_score'],
+            required: true
+        },
+        threshold: {
+            type: Number,
+            required: true,
+            min: 1
+        },
+        subject: {
+            type: String
+        }
+    },
     requirement: {
         type: Number,
         required: true,
         min: 1
     },
-    points: {
+    pointsReward: {
         type: Number,
         required: true,
         min: 1

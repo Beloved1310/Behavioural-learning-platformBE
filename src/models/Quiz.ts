@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { IQuiz, IQuestion } from '../types';
+import { IQuiz, IQuestion, QuizDifficulty } from '../types';
 
 const questionSchema = new Schema<IQuestion>({
   type: {
@@ -54,6 +54,12 @@ const quizSchema = new Schema<IQuiz>({
     type: String,
     required: true,
     maxlength: 1000
+  },
+  difficulty: {
+    type: String,
+    enum: Object.values(QuizDifficulty),
+    required: true,
+    index: true
   },
   timeLimit: {
     type: Number, // in minutes
