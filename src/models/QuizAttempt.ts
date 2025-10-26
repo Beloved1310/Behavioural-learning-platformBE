@@ -17,6 +17,16 @@ const quizAttemptSchema = new Schema<IQuizAttempt>({
   score: {
     type: Number,
     required: true,
+    min: 0
+  },
+  totalPoints: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  percentage: {
+    type: Number,
+    required: true,
     min: 0,
     max: 100
   },

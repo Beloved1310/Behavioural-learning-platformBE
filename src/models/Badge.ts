@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { IBadge, BadgeType } from '../types';
+import { IBadge, BadgeType, BadgeCategory, BadgeRarity } from '../types';
 
 const badgeSchema = new Schema<IBadge>({
   type: {
@@ -24,12 +24,39 @@ const badgeSchema = new Schema<IBadge>({
     type: String,
     required: true
   },
+  category: {
+    type: String,
+    enum: Object.values(BadgeCategory),
+    required: true,
+    index: true
+  },
+  rarity: {
+    type: String,
+    enum: Object.values(BadgeRarity),
+    required: true,
+    default: BadgeRarity.COMMON
+  },
+  criteria: {
+    type: {
+      type: String,
+      enum: ['quiz_score', 'quiz_count', 'streak', 'points', 'perfect_score'],
+      required: true
+    },
+    threshold: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+    subject: {
+      type: String
+    }
+  },
   requirement: {
     type: Number,
     required: true,
     min: 1
   },
-  points: {
+  pointsReward: {
     type: Number,
     required: true,
     min: 1
