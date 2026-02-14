@@ -1,0 +1,383 @@
+import { Document, Types } from 'mongoose';
+
+export enum UserRole {
+  STUDENT = 'STUDENT',
+  TUTOR = 'TUTOR',
+  PARENT = 'PARENT',
+  ADMIN = 'ADMIN',
+}
+
+export enum SubscriptionTier {
+  BASIC = 'BASIC',
+  PREMIUM = 'PREMIUM',
+}
+
+export enum SessionStatus {
+  PENDING = 'pending', // Awaiting tutor approval
+  SCHEDULED = 'scheduled', // Approved by tutor or tutor-initiated
+  REJECTED = 'rejected', // Rejected by tutor
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+  MISSED = 'missed',
+}
+
+export enum SessionType {
+  STUDY = 'study',
+  TUTORING = 'tutoring',
+  QUIZ = 'quiz',
+  READING = 'reading',
+}
+
+export enum RecurringPattern {
+  DAILY = 'daily',
+  WEEKLY = 'weekly',
+  MONTHLY = 'monthly',
+}
+
+export enum PaymentStatus {
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+}
+
+export enum SubscriptionStatus {
+  ACTIVE = 'active',
+  CANCELLED = 'cancelled',
+  PAST_DUE = 'past_due',
+  EXPIRED = 'expired',
+  TRIALING = 'trialing',
+}
+
+export enum PaymentMethodType {
+  CARD = 'card',
+  BANK_ACCOUNT = 'bank_account',
+  PAYPAL = 'paypal',
+}
+
+export enum MessageType {
+  TEXT = 'TEXT',
+  FILE = 'FILE',
+  IMAGE = 'IMAGE',
+  SYSTEM = 'SYSTEM',
+}
+
+export enum BadgeType {
+  STREAK = 'STREAK',
+  COMPLETION = 'COMPLETION',
+  ACHIEVEMENT = 'ACHIEVEMENT',
+  MILESTONE = 'MILESTONE',
+}
+
+export enum BadgeCategory {
+  QUIZ = 'quiz',
+  STREAK = 'streak',
+  ACHIEVEMENT = 'achievement',
+  SPECIAL = 'special',
+}
+
+export enum BadgeRarity {
+  COMMON = 'common',
+  RARE = 'rare',
+  EPIC = 'epic',
+  LEGENDARY = 'legendary',
+}
+
+export enum QuizDifficulty {
+  EASY = 'easy',
+  MEDIUM = 'medium',
+  HARD = 'hard',
+}
+
+export interface IUser extends Document {
+  _id: Types.ObjectId;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  dateOfBirth?: Date;
+  phoneNumber?: string;
+  profileImage?: string;
+  isVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpiry?: Date;
+  resetPasswordToken?: string;
+  resetPasswordTokenExpiry?: Date;
+  subscriptionTier: SubscriptionTier;
+  subscriptionStatus?: SubscriptionStatus;
+  parentId?: Types.ObjectId;
+  stripeCustomerId?: string;
+
+  // Student specific fields
+  gradeLevel?: string;
+  learningStyle?: string;
+  academicGoals: string[];
+  streakCount: number;
+  totalPoints: number;
+  lastLoginAt?: Date;
+
+  // Tutor specific fields
+  subjects: string[];
+  hourlyRate?: number;
+  bio?: string;
+  qualifications: string[];
+  rating: number;
+  totalSessions: number;
+  isBackgroundChecked: boolean;
+
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Methods
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  isMinor(): boolean;
+}
+
+export interface IUserPreferences extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  studyReminders: boolean;
+  darkMode: boolean;
+  language: string;
+  timezone: string;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  smsNotifications: boolean;
+  sessionReminders: boolean;
+  progressReports: boolean;
+  weeklyReport: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ISession extends Document {
+  _id: Types.ObjectId;
+  studentId: Types.ObjectId;
+  tutorId?: Types.ObjectId;
+  subject: string;
+  title: string;
+  description?: string;
+  type: SessionType;
+  scheduledAt: Date;
+  duration: number; // in minutes
+  status: SessionStatus;
+  meetingUrl?: string;
+  price: number;
+  notes?: string;
+  rating?: number;
+  feedback?: string;
+  isRecurring: boolean;
+  recurringPattern?: RecurringPattern;
+  reminderEnabled: boolean;
+  reminderTime?: number; // minutes before session
+  createdAt: Date;
+  updatedAt: Date;
+  canBeCancelled(): boolean;
+}
+
+export interface IChat extends Document {
+  _id: Types.ObjectId;
+  participants: Types.ObjectId[];
+  title?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IMessage extends Document {
+  _id: Types.ObjectId;
+  chatId: Types.ObjectId;
+  senderId: Types.ObjectId;
+  type: MessageType;
+  content: string;
+  fileUrl?: string;
+  fileName?: string;
+  isRead: boolean;
+  createdAt: Date;
+}
+
+export interface IBadge extends Document {
+  _id: Types.ObjectId;
+  type: BadgeType;
+  name: string;
+  description: string;
+  icon: string;
+  category: BadgeCategory;
+  rarity: BadgeRarity;
+  criteria: {
+    type: 'quiz_score' | 'quiz_count' | 'streak' | 'points' | 'perfect_score';
+    threshold: number;
+    subject?: string;
+  };
+  requirement: number;
+  pointsReward: number;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+export interface IUserBadge extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  badgeId: Types.ObjectId;
+  earnedAt: Date;
+}
+
+export interface IQuiz extends Document {
+  _id: Types.ObjectId;
+  title: string;
+  subject: string;
+  description: string;
+  difficulty: QuizDifficulty;
+  timeLimit?: number; // in minutes
+  passingScore: number;
+  points: number;
+  isActive: boolean;
+  questions: IQuestion[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IQuestion {
+  _id: Types.ObjectId;
+  type: 'multiple_choice';
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  explanation?: string;
+  points: number;
+  order: number;
+}
+
+export interface IQuizAttempt extends Document {
+  _id: Types.ObjectId;
+  quizId: Types.ObjectId;
+  studentId: Types.ObjectId;
+  score: number;
+  totalPoints: number;
+  percentage: number;
+  completedAt: Date;
+  timeSpent: number; // in seconds
+  answers: any; // Store answers as object
+}
+
+export interface IPayment extends Document {
+  _id: Types.ObjectId;
+  guardianId: Types.ObjectId;
+  sessionId: Types.ObjectId;
+  amount: number;
+  status: PaymentStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Legacy interface for backward compatibility (will be removed)
+export interface IPaymentLegacy extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  sessionId?: Types.ObjectId;
+  amount: number; // in pence
+  currency: string;
+  status: PaymentStatus;
+  stripePaymentIntentId?: string;
+  description: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IBehavioralData extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  sessionDuration: number; // in seconds
+  actionsPerformed: number;
+  mood?: 'happy' | 'neutral' | 'frustrated' | 'confused';
+  engagementScore: number;
+  pageViews?: any; // Store page view data
+  timestamp: Date;
+}
+
+export interface IProgressReport extends Document {
+  _id: Types.ObjectId;
+  studentId: Types.ObjectId;
+  period: 'weekly' | 'monthly';
+  startDate: Date;
+  endDate: Date;
+  totalStudyTime: number; // in minutes
+  sessionsCompleted: number;
+  quizzesTaken: number;
+  averageScore: number;
+  streakDays: number;
+  badgesEarned: number;
+  pointsEarned: number;
+  insights: string[];
+  recommendations: string[];
+  generatedAt: Date;
+}
+
+export interface INotification extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  type: string;
+  title: string;
+  message: string;
+  data?: any;
+  isRead: boolean;
+  createdAt: Date;
+}
+
+export interface IStudyReminder extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  title: string;
+  description?: string;
+  scheduledAt: Date;
+  isRecurring: boolean;
+  frequency?: 'daily' | 'weekly' | 'monthly';
+  isActive: boolean;
+  createdAt: Date;
+  deactivate(): Promise<IStudyReminder>;
+  getNextOccurrence(): Date | null;
+}
+
+export interface IUserProgress extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  subject: string;
+  level: number;
+  currentXP: number;
+  nextLevelXP: number;
+  completedQuizzes: number;
+  averageScore: number;
+  studyTime: number; // in minutes
+  lastActivity: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ICustomEvent extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  eventType: string;
+  eventData: any;
+  page?: string;
+  sessionId?: string;
+  timestamp: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IRecommendation extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  type: 'content' | 'study_time' | 'break' | 'technique' | 'goal';
+  title: string;
+  description: string;
+  priority: number; // 1-5
+  metadata: any;
+  isRead: boolean;
+  isActioned: boolean;
+  expiresAt?: Date;
+  generatedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  markAsRead(): Promise<IRecommendation>;
+  markAsActioned(): Promise<IRecommendation>;
+}

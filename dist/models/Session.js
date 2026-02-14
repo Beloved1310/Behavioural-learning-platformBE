@@ -1,0 +1,138 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Session = void 0;
+const mongoose_1 = require("mongoose");
+const types_1 = require("../types");
+const sessionSchema = new mongoose_1.Schema({
+    studentId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
+    tutorId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'User',
+    },
+    subject: {
+        type: String,
+        required: true,
+    },
+    title: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 200,
+    },
+    description: {
+        type: String,
+        maxlength: 1000,
+    },
+    type: {
+        type: String,
+        enum: Object.values(types_1.SessionType),
+        required: true,
+        default: types_1.SessionType.STUDY,
+    },
+    scheduledAt: {
+        type: Date,
+        required: true,
+    },
+    duration: {
+        type: Number,
+        required: true,
+        min: 15,
+        max: 180, // 3 hours max
+    },
+    status: {
+        type: String,
+        enum: Object.values(types_1.SessionStatus),
+        default: types_1.SessionStatus.SCHEDULED,
+    },
+    meetingUrl: {
+        type: String,
+    },
+    price: {
+        type: Number,
+        default: 0,
+        min: 0,
+    },
+    notes: {
+        type: String,
+        maxlength: 2000,
+    },
+    rating: {
+        type: Number,
+        min: 1,
+        max: 5,
+    },
+    feedback: {
+        type: String,
+        maxlength: 1000,
+    },
+    isRecurring: {
+        type: Boolean,
+        default: false,
+    },
+    recurringPattern: {
+        type: String,
+        enum: Object.values(types_1.RecurringPattern),
+    },
+    reminderEnabled: {
+        type: Boolean,
+        default: true,
+    },
+    reminderTime: {
+        type: Number, // minutes before session
+        default: 15,
+        min: 5,
+        max: 1440, // max 24 hours
+    },
+}, {
+    timestamps: true,
+});
+// Compound indexes for efficient queries
+// For student's sessions sorted by date (most common query)
+sessionSchema.index({ studentId: 1, scheduledAt: -1 });
+// For tutor's sessions sorted by date
+sessionSchema.index({ tutorId: 1, scheduledAt: -1 });
+// For filtering sessions by status and date
+sessionSchema.index({ status: 1, scheduledAt: 1 });
+// For subject-based session queries
+sessionSchema.index({ subject: 1, scheduledAt: -1 });
+// For student sessions filtered by status (e.g., upcoming, completed)
+sessionSchema.index({ studentId: 1, status: 1, scheduledAt: -1 });
+// For tutor sessions filtered by status
+sessionSchema.index({ tutorId: 1, status: 1, scheduledAt: -1 });
+// For finding conflicting sessions (availability validation)
+sessionSchema.index({ tutorId: 1, scheduledAt: 1, status: 1 });
+// Virtual to populate student and tutor details
+sessionSchema.virtual('student', {
+    ref: 'User',
+    localField: 'studentId',
+    foreignField: '_id',
+    justOne: true,
+});
+sessionSchema.virtual('tutor', {
+    ref: 'User',
+    localField: 'tutorId',
+    foreignField: '_id',
+    justOne: true,
+});
+// Instance method to check if session can be cancelled
+sessionSchema.methods.canBeCancelled = function () {
+    const now = new Date();
+    const sessionTime = new Date(this.scheduledAt);
+    const hoursUntilSession = (sessionTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return hoursUntilSession > 2 && this.status === types_1.SessionStatus.SCHEDULED;
+};
+// Static method to find upcoming sessions
+sessionSchema.statics.findUpcomingSessions = function (userId, role) {
+    const field = role === 'student' ? 'studentId' : 'tutorId';
+    return this.find({
+        [field]: userId,
+        scheduledAt: { $gte: new Date() },
+        status: { $in: [types_1.SessionStatus.SCHEDULED, types_1.SessionStatus.IN_PROGRESS] },
+    }).sort({ scheduledAt: 1 });
+};
+exports.Session = (0, mongoose_1.model)('Session', sessionSchema);
+//# sourceMappingURL=Session.js.map

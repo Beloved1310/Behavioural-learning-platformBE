@@ -1,0 +1,1 @@
+{"version":3,"file":"tutorGoalsController.d.ts","sourceRoot":"","sources":["../../src/controllers/tutorGoalsController.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAWnC,qBAAa,oBAAoB;IAE/B,MAAM,CAAC,gBAAgB,gGA0CpB;IAGH,MAAM,CAAC,UAAU,gGA0Dd;IAGH,MAAM,CAAC,eAAe,gGA+CnB;IAGH,MAAM,CAAC,WAAW,gGAkCf;IAGH,MAAM,CAAC,UAAU,gGAqCd;CACJ"}
