@@ -105,9 +105,8 @@ app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.de
     customSiteTitle: 'Behavioral Learning Platform API Documentation',
     customfavIcon: '/favicon.ico',
 }));
-// API routes
-app.use('/api', (req, res) => {
-    res.json({ message: 'Behavioral Learning Platform API' });
+app.get('/', (req, res) => {
+    res.send('Server is running');
 });
 // Test endpoint to manually trigger parent email scheduler (development only)
 // Must be defined BEFORE other routes to avoid authentication middleware

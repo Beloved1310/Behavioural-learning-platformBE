@@ -111,9 +111,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customfavIcon: '/favicon.ico',
 }));
 
-// API routes
-app.use('/api', (req, res) => {
-  res.json({ message: 'Behavioral Learning Platform API' });
+app.get('/', (req, res) => {
+  res.send('Server is running');
 });
 
 // Test endpoint to manually trigger parent email scheduler (development only)
@@ -147,6 +146,7 @@ app.post('/v1/api/test/trigger-parent-emails', async (req, res) => {
     });
   }
 });
+
 
 app.use('/v1/api/auth', authRoutes);
 app.use('/v1/api/gamification', gamificationRoutes);
